@@ -40,8 +40,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# HTML fayl yo'li
-HTML_FILE_PATH = PROJECT_ROOT / "public" / "index.html"
+def _get_html_content() -> str:
+    """HTML faylni turli serverless yo'llaridan xavfsiz o'qish."""
+    candidates = [
+        PROJECT_ROOT / "public" / "index.html",
+        CURRENT_DIR.parent / "public" / "index.html",
+        Path("public/index.html"),
+        CURRENT_DIR / "index.html",
+    ]
+    for p in candidates:
+        if p.exists():
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception:
+                pass
+    return "<h1>«So‘nggi harf» — Veb interfeysi yuklanmoqda...</h1>"
 
 
 # Pydantic modellar
@@ -65,10 +79,8 @@ class ComputerTurnRequest(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
     """Asosiy Web sahifani qaytarish."""
-    if HTML_FILE_PATH.exists():
-        with open(HTML_FILE_PATH, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse(content="<h1>«So‘nggi harf» Web UI topilmadi.</h1>", status_code=404)
+    content = _get_html_content()
+    return HTMLResponse(content=content)
 
 
 @app.post("/api/start")

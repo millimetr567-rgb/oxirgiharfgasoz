@@ -57,21 +57,54 @@ class GeminiService:
         self.api_key = api_key.strip()
         self._init_sdk()
 
+    def _call_rest_api(self, prompt: str) -> str:
+        """Python standart urllib orqali to'g'ridan-to'g'ri Gemini REST API chaqiruvi."""
+        import urllib.request
+        import urllib.error
+
+        # Model nomini tekshirish (masalan gemini-2.5-flash yoki gemini-1.5-flash)
+        model = self.model_name
+        if not model.startswith("gemini-"):
+            model = "gemini-2.5-flash"
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": 0.2
+            }
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+        try:
+            with urllib.request.urlopen(req, timeout=API_TIMEOUT_SECONDS) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                candidates = result.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts and "text" in parts[0]:
+                        return parts[0]["text"]
+                raise ValueError("Gemini javobidan matn ajratib bo'lmadi.")
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8")
+            if e.code == 400 or e.code == 403:
+                raise PermissionError(f"Google Gemini API kaliti noto'g'ri yoki ruxsat yo'q: {err_body}")
+            elif e.code == 429:
+                raise ResourceWarning(f"Gemini API so'rovlar kvotasi tugadi (429): {err_body}")
+            raise RuntimeError(f"Gemini API HTTP xatosi {e.code}: {err_body}")
+
     def _execute_prompt_with_retry(self, prompt: str) -> str:
         """Promptni timeout va qayta urinishlar bilan bajarish."""
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY topilmadi! Iltimos, .env fayliga API kalitingizni kiriting.")
-
-        if not self._client:
-            self._init_sdk()
-            if not self._client:
-                raise RuntimeError("Gemini SDK mijozini ishga tushirib bo'lmadi.")
+            raise ValueError("GEMINI_API_KEY topilmadi! Iltimos, API kalitingizni kiriting.")
 
         last_error = None
         for attempt in range(1, API_MAX_RETRIES + 2):
             try:
-                if self._sdk_type == "google-genai":
-                    # Yangi rasmiy SDK
+                # 1. Yangi rasmiy SDK
+                if self._client and self._sdk_type == "google-genai":
                     response = self._client.models.generate_content(
                         model=self.model_name,
                         contents=prompt,
@@ -82,10 +115,9 @@ class GeminiService:
                     )
                     if hasattr(response, "text") and response.text:
                         return response.text
-                    raise ValueError("Gemini bo'sh javob qaytardi.")
 
-                elif self._sdk_type == "google-generativeai":
-                    # Standart SDK
+                # 2. Standart SDK
+                elif self._client and self._sdk_type == "google-generativeai":
                     response = self._client.generate_content(
                         prompt,
                         generation_config={
@@ -95,7 +127,9 @@ class GeminiService:
                     )
                     if hasattr(response, "text") and response.text:
                         return response.text
-                    raise ValueError("Gemini bo'sh javob qaytardi.")
+
+                # 3. Har qanday holatda to'g'ridan-to'g'ri REST API (Serverless va Vercel uchun eng ishonchli)
+                return self._call_rest_api(prompt)
 
             except Exception as exc:
                 last_error = exc
