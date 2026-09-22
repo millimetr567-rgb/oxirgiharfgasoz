@@ -84,6 +84,7 @@ async def get_index():
 
 
 @app.post("/api/start")
+@app.post("/start")
 async def start_game(req: StartGameRequest):
     """Yangi o'yinni boshlash."""
     start_info = db.get_random_starting_word()
@@ -100,9 +101,9 @@ async def start_game(req: StartGameRequest):
 
 
 @app.post("/api/submit-word")
+@app.post("/submit-word")
 async def submit_word(req: SubmitWordRequest):
     """O'yinchi so'zini tekshirish."""
-    # Agar so'rovda API key berilgan bo'lsa, maxsus servis yaratish
     ai_service = GeminiService(api_key=req.api_key) if req.api_key else None
     validator = WordValidator(database=db, ai_service=ai_service) if ai_service else WordValidator(database=db)
 
@@ -126,6 +127,7 @@ async def submit_word(req: SubmitWordRequest):
 
 
 @app.post("/api/computer-turn")
+@app.post("/computer-turn")
 async def computer_turn(req: ComputerTurnRequest):
     """Kompyuter navbati: avval mahalliy bazadan, so'ng Gemini AI dan so'z topish."""
     target_letter = clean_word(req.starting_letter)

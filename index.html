@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>«So‘nggi harf» — Kutubxona intellektual o‘yini (Gemini AI)</title>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-animation {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
+          <i data-lucide="book-open" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+            «So‘nggi harf»
+          </h1>
+          <p class="text-xs text-slate-400">Axborot-kutubxona intellektual o‘yini</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <span id="apiStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Gemini AI
+        </span>
+        <button onclick="openApiKeyModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors">
+          <i data-lucide="key" class="w-3.5 h-3.5"></i>
+          <span>API Kalit</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Chap/Asosiy O'yin Maydoni (8 kolonka) -->
+    <div class="lg:col-span-8 flex flex-col space-y-5">
+
+      <!-- Statistika va 7 Soniyalik Taymer Paneli -->
+      <div class="grid grid-cols-3 gap-3">
+        <!-- Hisob -->
+        <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hisob</span>
+          <span id="scoreDisplay" class="text-2xl md:text-3xl font-black text-sky-400 mt-1">0</span>
+        </div>
+
+        <!-- Ketma-ketlik -->
+        <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ketma-ketlik</span>
+          <span id="streakDisplay" class="text-2xl md:text-3xl font-black text-amber-400 mt-1">0 🔥</span>
+        </div>
+
+        <!-- 7 Soniyalik Taymer -->
+        <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vaqt</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="timerValue" class="text-3xl md:text-4xl font-black text-emerald-400 tracking-tight">7</span>
+            <span class="text-xs text-slate-400">soniya</span>
+          </div>
+          <!-- Vaqt progress chizig'i -->
+          <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800">
+            <div id="timerBar" class="h-full bg-emerald-400 transition-all duration-100 ease-linear" style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kompyuter Bergan So'z Kartochkasi -->
+      <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 rounded-2xl p-6 md:p-8 relative overflow-hidden shadow-xl shadow-slate-950/50">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+          <i data-lucide="bot" class="w-4 h-4 text-indigo-400"></i>
+          <span>Kompyuter Aytgan So‘z:</span>
+        </div>
+
+        <!-- So'z matni -->
+        <div id="wordDisplayContainer" class="my-4">
+          <div id="currentWordText" class="text-3xl md:text-5xl font-extrabold text-slate-100 tracking-wide break-words">
+            O‘yinni boshlang
+          </div>
+        </div>
+
+        <!-- So'z izohi -->
+        <p id="wordExplanation" class="text-sm md:text-base text-slate-300 italic leading-relaxed bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/50">
+          «O‘yinni boshlash» tugmasini bosing va kutubxona atamalari bilan bellashing.
+        </p>
+
+        <!-- Kutilayotgan harf ko'rsatkichi -->
+        <div id="targetLetterPrompt" class="mt-4 hidden items-center gap-2 text-sm md:text-base font-medium text-amber-300">
+          <i data-lucide="arrow-right-circle" class="w-5 h-5 text-amber-400 animate-bounce"></i>
+          <span>Sizning so‘zingiz <strong id="targetLetterStrong" class="underline decoration-amber-400 decoration-2 underline-offset-4 text-white text-lg"></strong> harfidan boshlanishi shart!</span>
+        </div>
+      </div>
+
+      <!-- Javob Kiritish Maydoni -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6">
+        <form id="wordForm" onsubmit="handleWordSubmit(event)" class="space-y-3">
+          <label for="playerInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Sizning javobingiz (oxirgi harf bilan boshlanadigan atama):
+          </label>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="text" 
+              id="playerInput" 
+              disabled
+              autocomplete="off"
+              placeholder="Masalan: kutubxona..." 
+              class="flex-1 bg-slate-950 border-2 border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-base md:text-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50"
+            />
+            <button 
+              type="submit" 
+              id="submitBtn" 
+              disabled
+              class="px-6 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Yuborish</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Status / AI Tekshiruv Xabari -->
+        <div id="statusAlert" class="mt-4 p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 text-sm text-slate-400 flex items-start gap-3">
+          <i data-lucide="info" id="statusIcon" class="w-5 h-5 text-blue-400 shrink-0 mt-0.5"></i>
+          <span id="statusMessage">Tayyor. O‘yinni boshlash uchun pastdagi tugmani bosing.</span>
+        </div>
+      </div>
+
+      <!-- Boshqaruv Tugmalari -->
+      <div class="flex items-center gap-4">
+        <button 
+          id="startGameBtn" 
+          onclick="startGame()" 
+          class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 cursor-pointer"
+        >
+          <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+          <span>O‘yinni boshlash</span>
+        </button>
+
+        <button 
+          id="restartGameBtn" 
+          onclick="startGame()" 
+          class="hidden flex-1 py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-lg rounded-2xl border border-slate-700 transition-all items-center justify-center gap-2 cursor-pointer"
+        >
+          <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+          <span>Qayta o‘ynash</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- O'ng Tomon: Ishlatilgan So'zlar Tarixi (4 kolonka) -->
+    <div class="lg:col-span-4 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-hidden max-h-[650px]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+          <h2 class="font-bold text-slate-200">Ishlatilgan so‘zlar</h2>
+        </div>
+        <span id="wordsCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 font-medium">0 ta</span>
+      </div>
+
+      <!-- So'zlar ro'yxati -->
+      <div id="historyList" class="flex-1 overflow-y-auto custom-scroll space-y-2.5 my-3 pr-1">
+        <div class="text-center py-12 text-slate-500 text-sm">
+          Hozircha hech qanday so‘z ishlatilmadi
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 text-xs text-slate-500 text-center">
+        Takroriy so‘zlar qabul qilinmaydi 🚫
+      </div>
+    </div>
+
+  </main>
+
+  <!-- O'yin Yakuni Modali -->
+  <div id="gameOverModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 max-w-md w-full rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in duration-200">
+      <div id="modalIconContainer" class="w-20 h-20 mx-auto rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+        <i data-lucide="flag" class="w-10 h-10"></i>
+      </div>
+
+      <div class="space-y-2">
+        <h3 id="modalTitle" class="text-2xl font-black text-slate-100">O‘yin yakunlandi!</h3>
+        <p id="modalReason" class="text-slate-400 text-sm leading-relaxed"></p>
+      </div>
+
+      <!-- Statistika bloki -->
+      <div class="bg-slate-950/60 rounded-2xl p-4 border border-slate-800/80 grid grid-cols-2 gap-3 text-left">
+        <div>
+          <span class="text-xs text-slate-500 uppercase font-semibold">Yakuniy Ball:</span>
+          <p id="modalScore" class="text-xl font-bold text-sky-400">0</p>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 uppercase font-semibold">Ketma-ketlik:</span>
+          <p id="modalStreak" class="text-xl font-bold text-amber-400">0</p>
+        </div>
+        <div class="col-span-2 pt-2 border-t border-slate-800/60 flex justify-between items-center text-xs text-slate-400">
+          <span>Jami ishlatilgan so‘zlar:</span>
+          <strong id="modalTotalWords" class="text-white">0 ta</strong>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="startGame()" class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all cursor-pointer">
+          Qayta o‘ynash
+        </button>
+        <button onclick="closeModal()" class="px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl border border-slate-700 transition-all cursor-pointer">
+          Yopish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Kalitini Sozlash Modali -->
+  <div id="apiKeyModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 max-w-md w-full rounded-3xl p-6 md:p-8 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <i data-lucide="key" class="w-5 h-5 text-amber-400"></i>
+          <span>Google Gemini API Kaliti</span>
+        </h3>
+        <button onclick="closeApiKeyModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        API kalit orqali yangi so‘zlar haqiqiyligi va kutubxona sohasiga oidligi tekshiriladi. Kalitingiz brauzer xotirasida xavfsiz saqlanadi.
+      </p>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">GEMINI_API_KEY:</label>
+        <input 
+          type="password" 
+          id="apiKeyInput" 
+          placeholder="AIzaSy..." 
+          class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none"
+        />
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closeApiKeyModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl">
+          Bekor qilish
+        </button>
+        <button onclick="saveApiKey()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/30">
+          Saqlash
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript O'yin Mantiqi -->
+  <script>
+    // State
+    let gameState = {
+      score: 0,
+      streak: 0,
+      currentWord: '',
+      currentExplanation: '',
+      expectedLetter: '',
+      expectedLetterDisplay: '',
+      usedWords: [],
+      history: [],
+      isPlaying: false
+    };
+
+    let timerInterval = null;
+    let timeLeft = 7;
+    const TOTAL_TIME = 7;
+
+    // LocalStorage API key
+    let userApiKey = localStorage.getItem('gemini_api_key') || '';
+
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    function updateApiStatus() {
+      const badge = document.getElementById('apiStatusBadge');
+      if (userApiKey) {
+        badge.classList.remove('hidden');
+      }
+    }
+    updateApiStatus();
+
+    // Sound effect (Web Audio API)
+    function playBeep(type) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'tick') {
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          gain.gain.setValueAtTime(0.05, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        } else if (type === 'success') {
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        } else if (type === 'fail') {
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.setValueAtTime(160, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        }
+      } catch(e){}
+    }
+
+    // 7 Soniyalik Taymer
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = TOTAL_TIME;
+      updateTimerUI(timeLeft);
+
+      const startTime = performance.now();
+      timerInterval = setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        const remaining = Math.max(0, TOTAL_TIME - elapsed);
+        const displaySec = Math.ceil(remaining);
+
+        updateTimerUI(remaining, displaySec);
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          handleTimeout();
+        }
+      }, 50);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function updateTimerUI(remainingFraction, displaySec = Math.ceil(remainingFraction)) {
+      const timerValEl = document.getElementById('timerValue');
+      const timerBarEl = document.getElementById('timerBar');
+
+      timerValEl.innerText = displaySec;
+      const pct = (remainingFraction / TOTAL_TIME) * 100;
+      timerBarEl.style.width = `${pct}%`;
+
+      if (displaySec > 4) {
+        timerValEl.className = 'text-3xl md:text-4xl font-black text-emerald-400 tracking-tight';
+        timerBarEl.className = 'h-full bg-emerald-400 transition-all duration-75 ease-linear';
+      } else if (displaySec > 2) {
+        timerValEl.className = 'text-3xl md:text-4xl font-black text-amber-400 tracking-tight';
+        timerBarEl.className = 'h-full bg-amber-400 transition-all duration-75 ease-linear';
+      } else {
+        timerValEl.className = 'text-3xl md:text-4xl font-black text-red-500 tracking-tight';
+        timerBarEl.className = 'h-full bg-red-500 transition-all duration-75 ease-linear';
+      }
+    }
+
+    function handleTimeout() {
+      playBeep('fail');
+      setInputsEnabled(false);
+      setStatus("Vaqt tugadi! 7 soniya ichida javob berilmadi.", "error");
+      showGameOverModal("Vaqt tugadi!", "Afsus, 7 soniya ichida javob berilmadi. Navbat boy berildi!");
+    }
+
+    // O'yinni boshlash
+    async function startGame() {
+      closeModal();
+      document.getElementById('startGameBtn').classList.add('hidden');
+      document.getElementById('restartGameBtn').classList.remove('hidden');
+      document.getElementById('restartGameBtn').classList.add('flex');
+
+      setStatus("O‘yin boshlanmoqda...", "loading");
+
+      try {
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: userApiKey })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          setStatus(data.message || "Xatolik yuz berdi", "error");
+          return;
+        }
+
+        gameState = {
+          score: 0,
+          streak: 0,
+          currentWord: data.current_word,
+          currentExplanation: data.current_explanation,
+          expectedLetter: data.expected_letter,
+          expectedLetterDisplay: data.expected_letter_display,
+          usedWords: [data.current_word.toLowerCase()],
+          history: [{
+            author: 'Kompyuter',
+            word: data.current_word,
+            explanation: data.current_explanation
+          }],
+          isPlaying: true
+        };
+
+        renderGameUI();
+        startPlayerTurn();
+
+      } catch (err) {
+        setStatus("Server bilan bog‘lanishda xatolik: " + err.message, "error");
+      }
+    }
+
+    function startPlayerTurn() {
+      setInputsEnabled(true);
+      const input = document.getElementById('playerInput');
+      input.value = '';
+      input.focus();
+
+      setStatus(`⏳ Navbat sizda! 7 soniya ichida «${gameState.expectedLetterDisplay}» harfidan boshlanuvchi so‘z kiriting.`, "info");
+      startTimer();
+    }
+
+    function setInputsEnabled(enabled) {
+      document.getElementById('playerInput').disabled = !enabled;
+      document.getElementById('submitBtn').disabled = !enabled;
+    }
+
+    // O'yinchi so'zini yuborish
+    async function handleWordSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('playerInput');
+      const rawWord = input.value.trim();
+      if (!rawWord) return;
+
+      // Taymerni zudlik bilan to'xtatamiz (javob vaqtida berildi!)
+      stopTimer();
+      setInputsEnabled(false);
+      setStatus(`Gemini AI «${rawWord}» so‘zini tekshirmoqda...`, "loading");
+
+      try {
+        const res = await fetch('/api/submit-word', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word: rawWord,
+            expected_letter: gameState.expectedLetter,
+            used_words: gameState.usedWords,
+            api_key: userApiKey
+          })
+        });
+        const data = await res.json();
+
+        if (!data.success || !data.is_valid) {
+          playBeep('fail');
+          const err = data.error_message || data.explanation || "Noto‘g‘ri so‘z!";
+          setStatus(`❌ ${err}`, "error");
+          showGameOverModal("O‘yin yakunlandi!", `Kiritilgan so‘z qabul qilinmadi.\n\nSababi: ${err}`);
+          return;
+        }
+
+        // To'g'ri so'z!
+        playBeep('success');
+        gameState.score += 10 + (gameState.streak * 2);
+        gameState.streak += 1;
+        gameState.currentWord = data.word;
+        gameState.currentExplanation = data.explanation;
+        gameState.expectedLetter = data.ends_with;
+        gameState.usedWords.push(data.word.toLowerCase());
+        gameState.history.unshift({
+          author: "O'yinchi",
+          word: data.word,
+          explanation: data.explanation
+        });
+
+        renderGameUI();
+        setStatus(`✅ Ajoyib! Endi kompyuter so‘z izlamoqda...`, "loading");
+
+        // Kompyuter navbati
+        setTimeout(playComputerTurn, 600);
+
+      } catch (err) {
+        setStatus("Server xatosi: " + err.message, "error");
+      }
+    }
+
+    // Kompyuter navbati
+    async function playComputerTurn() {
+      try {
+        const res = await fetch('/api/computer-turn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            starting_letter: gameState.expectedLetter,
+            used_words: gameState.usedWords,
+            api_key: userApiKey
+          })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          playBeep('success');
+          const reason = data.reason || "Kompyuter so‘z topa olmadi.";
+          setStatus(`🏆 ${reason}`, "success");
+          showGameOverModal("Tabriklaymiz, Siz G'olib Bo'ldingiz!", reason, true);
+          return;
+        }
+
+        gameState.currentWord = data.word;
+        gameState.currentExplanation = data.explanation;
+        gameState.expectedLetter = data.expected_letter;
+        gameState.expectedLetterDisplay = data.expected_letter_display;
+        gameState.usedWords.push(data.word.toLowerCase());
+        gameState.history.unshift({
+          author: "Kompyuter",
+          word: data.word,
+          explanation: data.explanation
+        });
+
+        renderGameUI();
+        startPlayerTurn();
+
+      } catch (err) {
+        setStatus("Kompyuter xatosi: " + err.message, "error");
+      }
+    }
+
+    // UI Render
+    function renderGameUI() {
+      document.getElementById('scoreDisplay').innerText = gameState.score;
+      document.getElementById('streakDisplay').innerText = `${gameState.streak} 🔥`;
+
+      // Kompyuter so'zi va oxirgi harfni ajratish
+      const word = gameState.currentWord;
+      const last = gameState.expectedLetter;
+      let formattedWord = word;
+      if (word.toLowerCase().endsWith(last.toLowerCase())) {
+        const prefix = word.slice(0, word.length - last.length);
+        const highlight = word.slice(word.length - last.length);
+        formattedWord = `${prefix}<span class="text-amber-400 bg-amber-950/70 border border-amber-500/40 px-2 py-0.5 rounded-lg ml-0.5 inline-block">${highlight}</span>`;
+      }
+      document.getElementById('currentWordText').innerHTML = formattedWord;
+      document.getElementById('wordExplanation').innerText = gameState.currentExplanation || "Kutubxona atamasi.";
+
+      // Kutilayotgan harf ko'rsatkichi
+      const promptEl = document.getElementById('targetLetterPrompt');
+      const strongEl = document.getElementById('targetLetterStrong');
+      promptEl.classList.remove('hidden');
+      promptEl.classList.add('flex');
+      strongEl.innerText = `«${gameState.expectedLetterDisplay || last.toUpperCase()}»`;
+
+      // Ishlatilgan so'zlar ro'yxati
+      const historyEl = document.getElementById('historyList');
+      document.getElementById('wordsCountBadge').innerText = `${gameState.history.length} ta`;
+
+      if (gameState.history.length === 0) {
+        historyEl.innerHTML = '<div class="text-center py-12 text-slate-500 text-sm">Hozircha hech qanday so‘z ishlatilmadi</div>';
+      } else {
+        historyEl.innerHTML = gameState.history.map(item => {
+          const isPlayer = item.author === "O'yinchi";
+          return `
+            <div class="p-3 rounded-xl border ${isPlayer ? 'bg-sky-950/30 border-sky-800/40' : 'bg-slate-950/60 border-slate-800/80'}">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-sm tracking-wide ${isPlayer ? 'text-sky-300' : 'text-amber-400'}">
+                  ${isPlayer ? '👤' : '🤖'} ${item.word.toUpperCase()}
+                </span>
+                <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded ${isPlayer ? 'bg-sky-900/50 text-sky-300' : 'bg-amber-900/40 text-amber-300'}">
+                  ${item.author}
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                ${item.explanation}
+              </p>
+            </div>
+          `;
+        }).join('');
+      }
+
+      lucide.createIcons();
+    }
+
+    function setStatus(msg, type = "info") {
+      const msgEl = document.getElementById('statusMessage');
+      const alertEl = document.getElementById('statusAlert');
+      const iconEl = document.getElementById('statusIcon');
+      msgEl.innerText = msg;
+
+      if (type === "error") {
+        alertEl.className = "mt-4 p-3.5 rounded-xl border border-red-800/60 bg-red-950/40 text-sm text-red-300 flex items-start gap-3";
+        iconEl.setAttribute('data-lucide', 'alert-circle');
+      } else if (type === "success") {
+        alertEl.className = "mt-4 p-3.5 rounded-xl border border-emerald-800/60 bg-emerald-950/40 text-sm text-emerald-300 flex items-start gap-3";
+        iconEl.setAttribute('data-lucide', 'check-circle');
+      } else if (type === "loading") {
+        alertEl.className = "mt-4 p-3.5 rounded-xl border border-amber-800/60 bg-amber-950/30 text-sm text-amber-300 flex items-start gap-3";
+        iconEl.setAttribute('data-lucide', 'loader');
+      } else {
+        alertEl.className = "mt-4 p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 text-sm text-slate-400 flex items-start gap-3";
+        iconEl.setAttribute('data-lucide', 'info');
+      }
+      lucide.createIcons();
+    }
+
+    // Modal
+    function showGameOverModal(title, reason, isWin = false) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalReason').innerText = reason;
+      document.getElementById('modalScore').innerText = gameState.score;
+      document.getElementById('modalStreak').innerText = gameState.streak;
+      document.getElementById('modalTotalWords').innerText = `${gameState.history.length} ta`;
+
+      const iconBox = document.getElementById('modalIconContainer');
+      if (isWin) {
+        iconBox.className = "w-20 h-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400";
+        iconBox.innerHTML = '<i data-lucide="trophy" class="w-10 h-10"></i>';
+      } else {
+        iconBox.className = "w-20 h-20 mx-auto rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400";
+        iconBox.innerHTML = '<i data-lucide="flag" class="w-10 h-10"></i>';
+      }
+
+      document.getElementById('gameOverModal').classList.remove('hidden');
+      document.getElementById('gameOverModal').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('gameOverModal').classList.add('hidden');
+      document.getElementById('gameOverModal').classList.remove('flex');
+    }
+
+    // API Key Modal
+    function openApiKeyModal() {
+      document.getElementById('apiKeyInput').value = userApiKey;
+      document.getElementById('apiKeyModal').classList.remove('hidden');
+      document.getElementById('apiKeyModal').classList.add('flex');
+    }
+
+    function closeApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.add('hidden');
+      document.getElementById('apiKeyModal').classList.remove('flex');
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      userApiKey = key;
+      localStorage.setItem('gemini_api_key', key);
+      updateApiStatus();
+      closeApiKeyModal();
+      setStatus("API kaliti muvaffaqiyatli saqlandi!", "success");
+    }
+  </script>
+</body>
+</html>
