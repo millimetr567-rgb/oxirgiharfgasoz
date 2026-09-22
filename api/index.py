@@ -40,6 +40,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Har qanday ichki xatolikni foydalanuvchiga tushunarli JSON formatida qaytarish."""
+    import traceback
+    return JSONResponse(
+        status_code=200,  # 500 o'rniga 200 beramiz, shunda frontend xato sababini ko'rsata oladi
+        content={
+            "success": False,
+            "error": str(exc),
+            "message": f"Server xatoligi: {str(exc)}"
+        }
+    )
+
 def _get_html_content() -> str:
     """HTML faylni turli serverless yo'llaridan xavfsiz o'qish."""
     candidates = [

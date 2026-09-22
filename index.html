@@ -395,6 +395,45 @@
       showGameOverModal("Vaqt tugadi!", "Afsus, 7 soniya ichida javob berilmadi. Navbat boy berildi!");
     }
 
+    // Serverless xavfsiz API so'rovi (dual-path fallback bilan)
+    async function apiFetch(endpoint, body) {
+      let res;
+      try {
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } catch (e) {
+        throw new Error("Tarmoq xatosi: " + e.message);
+      }
+
+      // Agar 404 bo'lsa va /api/ bilan boshlansa, / ga fallback qilish
+      if (res.status === 404 && endpoint.startsWith('/api/')) {
+        const alt = endpoint.replace('/api/', '/');
+        try {
+          res = await fetch(alt, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+        } catch (e) {}
+      }
+
+      if (!res.ok) {
+        let errDetail = "";
+        try {
+          const errData = await res.json();
+          errDetail = errData.message || errData.error || "";
+        } catch(e) {
+          try { errDetail = (await res.text()).slice(0, 150); } catch(e2) {}
+        }
+        throw new Error(errDetail || `Server xatoligi (${res.status})`);
+      }
+
+      return await res.json();
+    }
+
     // O'yinni boshlash
     async function startGame() {
       closeModal();
@@ -405,12 +444,7 @@
       setStatus("O‘yin boshlanmoqda...", "loading");
 
       try {
-        const res = await fetch('/api/start', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ api_key: userApiKey })
-        });
-        const data = await res.json();
+        const data = await apiFetch('/api/start', { api_key: userApiKey });
 
         if (!data.success) {
           setStatus(data.message || "Xatolik yuz berdi", "error");
@@ -437,7 +471,7 @@
         startPlayerTurn();
 
       } catch (err) {
-        setStatus("Server bilan bog‘lanishda xatolik: " + err.message, "error");
+        setStatus("Bog‘lanishda xatolik: " + err.message, "error");
       }
     }
 
@@ -469,17 +503,12 @@
       setStatus(`Gemini AI «${rawWord}» so‘zini tekshirmoqda...`, "loading");
 
       try {
-        const res = await fetch('/api/submit-word', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            word: rawWord,
-            expected_letter: gameState.expectedLetter,
-            used_words: gameState.usedWords,
-            api_key: userApiKey
-          })
+        const data = await apiFetch('/api/submit-word', {
+          word: rawWord,
+          expected_letter: gameState.expectedLetter,
+          used_words: gameState.usedWords,
+          api_key: userApiKey
         });
-        const data = await res.json();
 
         if (!data.success || !data.is_valid) {
           playBeep('fail');
@@ -510,23 +539,18 @@
         setTimeout(playComputerTurn, 600);
 
       } catch (err) {
-        setStatus("Server xatosi: " + err.message, "error");
+        setStatus("Xatolik: " + err.message, "error");
       }
     }
 
     // Kompyuter navbati
     async function playComputerTurn() {
       try {
-        const res = await fetch('/api/computer-turn', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            starting_letter: gameState.expectedLetter,
-            used_words: gameState.usedWords,
-            api_key: userApiKey
-          })
+        const data = await apiFetch('/api/computer-turn', {
+          starting_letter: gameState.expectedLetter,
+          used_words: gameState.usedWords,
+          api_key: userApiKey
         });
-        const data = await res.json();
 
         if (!data.success) {
           playBeep('success');

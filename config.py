@@ -31,7 +31,10 @@ API_MAX_RETRIES = 2  # Qayta urinishlar soni
 
 # Ma'lumotlar bazasi yo'llari
 DATA_DIR = BASE_DIR / "data"
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 DB_PATH = DATA_DIR / "library_words.db"
 JSON_WORDS_PATH = DATA_DIR / "library_words.json"
 
@@ -48,6 +51,9 @@ def update_api_key(new_key: str):
     os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 
     # .env fayliga xavfsiz saqlash
-    env_content = f"# Google Gemini API kaliti\nGEMINI_API_KEY={GEMINI_API_KEY}\nGEMINI_MODEL={GEMINI_MODEL}\n"
-    with open(ENV_PATH, "w", encoding="utf-8") as f:
-        f.write(env_content)
+    try:
+        env_content = f"# Google Gemini API kaliti\nGEMINI_API_KEY={GEMINI_API_KEY}\nGEMINI_MODEL={GEMINI_MODEL}\n"
+        with open(ENV_PATH, "w", encoding="utf-8") as f:
+            f.write(env_content)
+    except Exception:
+        pass
